@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 
-// Use the Vercel URL for the signaling server
-const SOCKET_URL = 'https://meet-six-eta.vercel.app';
+const SOCKET_URL = 'https://meet-server-lsp0.onrender.com';
 
 export const useMeeting = (roomId, userName) => {
   const [localStream, setLocalStream] = useState(null);
-  const [peers, setPeers] = useState([]); // Array of { socketId, name, stream }
+  const [peers, setPeers] = useState([]); // Array of { socketId, name, stream, isMicOn, isCamOn }
   const [messages, setMessages] = useState([]);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
@@ -38,13 +37,12 @@ export const useMeeting = (roomId, userName) => {
 
     pc.ontrack = (event) => {
       setPeers((prevPeers) => {
-        const existingPeerIndex = prevPeers.findIndex(p => p.socketId === targetSocketId);
-        if (existingPeerIndex !== -1) {
-          const updatedPeers = [...prevPeers];
-          updatedPeers[existingPeerIndex] = { ...updatedPeers[existingPeerIndex], stream: event.streams[0] };
-          return updatedPeers;
-        }
-        return [...prevPeers, { socketId: targetSocketId, name, stream: event.streams[0] }];
+        return prevPeers.map(p => {
+          if (p.socketId === targetSocketId) {
+            return { ...p, stream: event.streams[0] };
+          }
+          return p;
+        });
       });
     };
 
@@ -82,7 +80,12 @@ export const useMeeting = (roomId, userName) => {
     socketRef.current = io(SOCKET_URL);
 
     socketRef.current.on('connect', () => {
-      socketRef.current.emit('join-room', { roomId, name: userName });
+      socketRef.current.emit('join-room', {
+        roomId,
+        name: userName,
+        isMicOn: isMicOn,
+        isCamOn: isCamOn
+      });
     });
 
     socketRef.current.on('all-users', (users) => {
@@ -98,14 +101,35 @@ export const useMeeting = (roomId, userName) => {
           signal: { type: 'offer', offer },
         });
 
-        setPeers(prev => [...prev, { socketId: user.socketId, name: user.name, stream: null }]);
+        setPeers(prev => [...prev, {
+          socketId: user.socketId,
+          name: user.name,
+          stream: null,
+          isMicOn: user.isMicOn,
+          isCamOn: user.isCamOn
+        }]);
       });
     });
 
-    socketRef.current.on('user-joined', async ({ socketId, name }) => {
+    socketRef.current.on('user-joined', async ({ socketId, name, isMicOn, isCamOn }) => {
       const pc = createPeerConnection(socketId, name);
       peersRef.current[socketId] = pc;
-      setPeers(prev => [...prev, { socketId, name, stream: null }]);
+      setPeers(prev => [...prev, {
+        socketId,
+        name,
+        stream: null,
+        isMicOn,
+        isCamOn
+      }]);
+    });
+
+    socketRef.current.on('user-media-updated', ({ socketId, isMicOn, isCamOn }) => {
+      setPeers(prev => prev.map(p => {
+        if (p.socketId === socketId) {
+          return { ...p, isMicOn, isCamOn };
+        }
+        return p;
+      }));
     });
 
     socketRef.current.on('signal', async ({ senderId, signal }) => {
@@ -146,6 +170,13 @@ export const useMeeting = (roomId, userName) => {
       Object.values(peersRef.current).forEach(pc => pc.close());
     };
   }, [roomId, userName, createPeerConnection]);
+
+  // Sync media changes to socket
+  useEffect(() => {
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('update-media-status', { roomId, isMicOn, isCamOn });
+    }
+  }, [isMicOn, isCamOn, roomId]);
 
   const toggleMic = () => {
     if (localStreamRef.current) {

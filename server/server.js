@@ -18,31 +18,49 @@ const io = new Server(server, {
   }
 });
 
-const rooms = {}; // roomId -> Array of { socketId, name }
+const rooms = {}; // roomId -> Array of { socketId, name, isMicOn, isCamOn }
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('join-room', ({ roomId, name }) => {
+  socket.on('join-room', ({ roomId, name, isMicOn, isCamOn }) => {
     socket.join(roomId);
 
     if (!rooms[roomId]) {
       rooms[roomId] = [];
     }
 
-    // Inform other users in the room
-    socket.to(roomId).emit('user-joined', { socketId: socket.id, name });
+    const newUser = {
+      socketId: socket.id,
+      name,
+      isMicOn: isMicOn !== undefined ? isMicOn : true,
+      isCamOn: isCamOn !== undefined ? isCamOn : true
+    };
+
+    // Inform other users in the room about the new user
+    socket.to(roomId).emit('user-joined', newUser);
 
     // Send the list of existing users to the new user
-    const otherUsers = rooms[roomId];
-    socket.emit('all-users', otherUsers);
+    socket.emit('all-users', rooms[roomId]);
 
-    rooms[roomId].push({ socketId: socket.id, name });
-    console.log(`User ${name} (${socket.id}) joined room ${roomId}`);
+    rooms[roomId].push(newUser);
+    console.log(`User ${name} joined room ${roomId}`);
   });
 
   socket.on('signal', ({ targetId, signal }) => {
     io.to(targetId).emit('signal', { senderId: socket.id, signal });
+  });
+
+  socket.on('update-media-status', ({ roomId, isMicOn, isCamOn }) => {
+    if (rooms[roomId]) {
+      const user = rooms[roomId].find(u => u.socketId === socket.id);
+      if (user) {
+        user.isMicOn = isMicOn;
+        user.isCamOn = isCamOn;
+        // Broadcast change to everyone else in the room
+        socket.to(roomId).emit('user-media-updated', { socketId: socket.id, isMicOn, isCamOn });
+      }
+    }
   });
 
   socket.on('chat-message', ({ roomId, text, sender }) => {
@@ -58,7 +76,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
