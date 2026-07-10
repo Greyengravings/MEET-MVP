@@ -192,8 +192,8 @@ const MeetingRoom = () => {
         />
 
         <div className={cn(
-          "flex-1 flex flex-col transition-none", // Fixed stretching: remove transition-all from parent
-          sidebarType && !isMobile ? "md:mr-[360px]" : ""
+          "flex-1 flex flex-col",
+          sidebarType && !isMobile ? "mr-[340px]" : ""
         )}>
           <VideoGrid
             participants={meeting.peers}
@@ -211,37 +211,56 @@ const MeetingRoom = () => {
         </div>
 
         {/* Sidebar Container - FIXED stretching animation */}
-        <div className={cn(
-          "h-full bg-dark-bg z-40 flex flex-col border-l border-white/5 transition-all duration-250 ease-out shadow-2xl",
-          isMobile
-            ? "fixed inset-0 w-full"
-            : "absolute right-0 top-0 w-[360px]",
-          sidebarType
-            ? "translate-x-0 opacity-100 pointer-events-auto"
-            : "translate-x-full opacity-0 pointer-events-none"
-        )}>
-          {sidebarType === 'chat' && (
-            <Chat
-              messages={meeting.messages}
-              onSendMessage={meeting.sendMessage}
-              onClose={() => setSidebarType(null)}
-              isMobile={isMobile}
-            />
-          )}
-          {sidebarType === 'people' && (
-            <ParticipantsPanel
-              participants={meeting.peers}
-              localUser={{
-                name: userName,
-                isMicOn: meeting.isMicOn,
-                isCamOn: meeting.isCamOn,
-                isHandRaised: meeting.isHandRaised
-              }}
-              onClose={() => setSidebarType(null)}
-              isMobile={isMobile}
-            />
-          )}
-        </div>
+        {sidebarType && !isMobile && (
+          <div className="absolute right-0 top-0 bottom-0 w-[340px] bg-dark-bg z-40 flex flex-col border-l border-white/5 shadow-2xl animate-in slide-in-from-right duration-200">
+            {sidebarType === 'chat' ? (
+              <Chat
+                messages={meeting.messages}
+                onSendMessage={meeting.sendMessage}
+                onClose={() => setSidebarType(null)}
+                isMobile={false}
+              />
+            ) : (
+              <ParticipantsPanel
+                participants={meeting.peers}
+                localUser={{
+                  name: userName,
+                  isMicOn: meeting.isMicOn,
+                  isCamOn: meeting.isCamOn,
+                  isHandRaised: meeting.isHandRaised
+                }}
+                onClose={() => setSidebarType(null)}
+                isMobile={false}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Mobile Overlay */}
+        {sidebarType && isMobile && (
+          <div className="fixed inset-0 bg-black z-[100] flex flex-col animate-in fade-in duration-200">
+            {sidebarType === 'chat' ? (
+              <Chat
+                messages={meeting.messages}
+                onSendMessage={meeting.sendMessage}
+                onClose={() => setSidebarType(null)}
+                isMobile={true}
+              />
+            ) : (
+              <ParticipantsPanel
+                participants={meeting.peers}
+                localUser={{
+                  name: userName,
+                  isMicOn: meeting.isMicOn,
+                  isCamOn: meeting.isCamOn,
+                  isHandRaised: meeting.isHandRaised
+                }}
+                onClose={() => setSidebarType(null)}
+                isMobile={true}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <MeetingNotification

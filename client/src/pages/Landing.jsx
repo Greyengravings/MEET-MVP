@@ -31,8 +31,8 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans overflow-x-hidden">
       {/* Navbar */}
-      <header className="h-16 px-6 md:px-12 flex items-center justify-between border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-        <BytesMeetLogo />
+      <header className="h-16 px-5 md:px-12 flex items-center justify-between border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <BytesMeetLogo className="md:text-2xl text-xl" />
         <div className="hidden md:flex items-center gap-6 text-white/50 text-sm font-medium">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4" />
@@ -42,21 +42,21 @@ const Landing = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-24 py-12 lg:py-0 gap-16 max-w-7xl mx-auto w-full">
-        <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left duration-700">
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-5 lg:px-24 py-8 lg:py-0 gap-10 lg:gap-16 max-w-7xl mx-auto w-full">
+        <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-left duration-700">
+          <div className="space-y-3 lg:space-y-4">
+            <h1 className="text-[clamp(40px,10vw,72px)] font-bold leading-[1.0] tracking-tight">
               Meet. Connect.<br />Collaborate.
             </h1>
-            <p className="text-white/50 text-xl font-light max-w-lg leading-relaxed">
-              Simple video meetings built for seamless conversations. No friction, just connection.
+            <p className="text-white/50 text-lg lg:text-xl font-light max-w-lg leading-relaxed">
+              Simple video meetings built for seamless conversations.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md lg:max-w-none">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md lg:max-w-none">
             <button
               onClick={handleCreateMeeting}
-              className="w-full sm:w-auto bg-accent-purple hover:bg-accent-purpleHover text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all shadow-xl shadow-accent-purple/10 active:scale-95 whitespace-nowrap"
+              className="w-full sm:w-auto bg-accent-purple hover:bg-accent-purpleHover text-white px-8 h-[56px] rounded-xl font-semibold flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-5 h-5" />
               New meeting
@@ -70,13 +70,13 @@ const Landing = () => {
                   placeholder="Enter meeting code"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 focus:border-accent-purple focus:ring-1 focus:ring-accent-purple rounded-xl py-4 pl-12 pr-4 outline-none transition-all text-lg placeholder-white/20"
+                  className="w-full h-[56px] bg-white/5 border border-white/10 focus:border-accent-purple focus:ring-1 focus:ring-accent-purple rounded-xl pl-12 pr-4 outline-none transition-all text-lg placeholder-white/20"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!roomCode.trim()}
-                className="bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white p-4 rounded-xl transition-all border border-white/10"
+                className="bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white w-[56px] h-[56px] rounded-xl transition-all border border-white/10 flex items-center justify-center shrink-0"
                 aria-label="Join meeting"
               >
                 <ArrowRight className="w-6 h-6" />
@@ -84,7 +84,7 @@ const Landing = () => {
             </form>
           </div>
 
-          <div className="pt-8 border-t border-white/5 w-full flex flex-wrap justify-center lg:justify-start gap-8 opacity-40">
+          <div className="hidden lg:flex pt-8 border-t border-white/5 w-full flex-wrap justify-center lg:justify-start gap-8 opacity-40">
              <div className="flex items-center gap-2 text-sm">
                <Globe className="w-4 h-4" />
                <span>Available everywhere</span>
@@ -94,40 +94,43 @@ const Landing = () => {
                <span className="font-medium">Simple. Fast. Connected.</span>
              </div>
           </div>
+
+          <div className="lg:hidden text-xs font-medium text-accent-purple opacity-40 tracking-widest uppercase">
+            Simple. Fast. Connected.
+          </div>
         </div>
 
         {/* Abstract Preview Card */}
-        <div className="flex-1 w-full max-w-lg lg:max-w-md animate-in fade-in zoom-in duration-1000 delay-200">
-          <div className="relative aspect-[4/3] rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl p-6 flex flex-col gap-4">
+        <div className="w-full max-w-[400px] lg:max-w-md animate-in fade-in zoom-in duration-1000 delay-200 lg:block">
+          <div className="relative aspect-[16/10] lg:aspect-[4/3] rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl p-5 flex flex-col gap-3">
              {/* Header UI Mockup */}
-             <div className="flex items-center justify-between opacity-20">
-               <div className="flex gap-2">
-                 <div className="w-3 h-3 rounded-full bg-white" />
-                 <div className="w-3 h-3 rounded-full bg-white" />
+             <div className="flex items-center justify-between opacity-10">
+               <div className="flex gap-1.5">
+                 <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                 <div className="w-2.5 h-2.5 rounded-full bg-white" />
                </div>
-               <div className="w-16 h-3 rounded-full bg-white" />
+               <div className="w-12 h-2.5 rounded-full bg-white" />
              </div>
 
              {/* Participants Grid Mockup */}
-             <div className="flex-1 grid grid-cols-2 gap-3">
+             <div className="flex-1 grid grid-cols-2 gap-2">
                 {[
                   { name: 'HN', color: 'bg-accent-purple' },
                   { name: 'AS', color: 'bg-white/10' },
                   { name: 'RK', color: 'bg-white/5' },
                   { name: '+3', color: 'bg-black' }
                 ].map((p, i) => (
-                  <div key={i} className={cn("rounded-xl flex items-center justify-center border border-white/5 relative overflow-hidden group", p.color)}>
-                     <span className="text-xl font-bold opacity-40">{p.name}</span>
-                     <div className="absolute bottom-2 left-2 w-8 h-2 rounded-full bg-white/10" />
+                  <div key={i} className={cn("rounded-lg flex items-center justify-center border border-white/5 relative overflow-hidden", p.color)}>
+                     <span className="text-lg font-bold opacity-30">{p.name}</span>
                   </div>
                 ))}
              </div>
 
              {/* Controls UI Mockup */}
-             <div className="flex justify-center gap-3 opacity-20">
-                <div className="w-8 h-8 rounded-full bg-white" />
-                <div className="w-8 h-8 rounded-full bg-white" />
-                <div className="w-8 h-8 rounded-full bg-red-500" />
+             <div className="flex justify-center gap-2 opacity-10">
+                <div className="w-6 h-6 rounded-full bg-white" />
+                <div className="w-6 h-6 rounded-full bg-white" />
+                <div className="w-6 h-6 rounded-full bg-red-500" />
              </div>
           </div>
         </div>

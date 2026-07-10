@@ -19,22 +19,19 @@ const MeetingInfoBar = ({ roomId, raisedHands = [], onInfoClick }) => {
   };
 
   return (
-    <div className="absolute top-0 left-0 p-4 z-30 flex items-center gap-4 text-white select-none pointer-events-none pt-[max(1rem,env(safe-area-inset-top))]">
+    <div className="absolute top-0 left-0 right-0 p-3 z-30 flex items-center justify-between md:justify-start gap-3 text-white pointer-events-none pt-[max(0.75rem,env(safe-area-inset-top))]">
       <div
-        className="flex items-center gap-3 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-lg pointer-events-auto cursor-pointer hover:bg-black/40 transition-colors"
+        className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full pointer-events-auto cursor-pointer border border-white/5 active:bg-white/10 transition-colors"
         onClick={onInfoClick}
       >
-        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 text-sm font-medium">
-          <span className="tabular-nums">{time}</span>
-          <span className="hidden md:inline text-white/20">|</span>
-          <span className="font-mono text-white/90">{roomId}</span>
-          <Info className="w-4 h-4 text-white/60 ml-1 hidden md:block" />
-        </div>
+        <span className="tabular-nums text-sm font-medium">{time}</span>
+        <span className="text-white/20">|</span>
+        <span className="font-mono text-sm text-white/80">{roomId}</span>
       </div>
 
       {raisedHands.length > 0 && (
-        <div className="flex items-center gap-2 bg-accent-purple/90 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-medium animate-in slide-in-from-left-4 duration-300">
-          <Hand className="w-4 h-4 fill-current" />
+        <div className="flex items-center gap-2 bg-accent-purple px-3 py-1.5 rounded-full text-xs font-bold pointer-events-auto shadow-lg animate-in slide-in-from-top-2 duration-300 uppercase tracking-tight">
+          <Hand className="w-3.5 h-3.5 fill-current" />
           <span>{raisedHandText()}</span>
         </div>
       )}
