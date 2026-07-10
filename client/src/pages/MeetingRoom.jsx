@@ -11,8 +11,16 @@ import MeetingInfoBar from '../components/MeetingInfoBar';
 import AdjustViewPanel from '../components/AdjustViewPanel';
 import MeetingSettings from '../components/MeetingSettings';
 import TroubleshootingPanel from '../components/TroubleshootingPanel';
+import ComingSoonToast from '../components/ComingSoonToast';
 import { Mic, MicOff, Video as VideoIcon, VideoOff } from 'lucide-react';
 import { cn } from '../lib/utils';
+
+const BytesMeetLogo = ({ className }) => (
+  <div className={cn("flex items-center gap-0.5 font-bold text-xl tracking-tighter select-none", className)}>
+    <span className="text-white">BYTES</span>
+    <span className="text-accent-purple">MEET</span>
+  </div>
+);
 
 const MeetingRoom = () => {
   const { roomId } = useParams();
@@ -23,12 +31,18 @@ const MeetingRoom = () => {
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [activePanel, setActivePanel] = useState(null); // 'adjust-view', 'settings', 'troubleshoot'
   const [currentLayout, setCurrentLayout] = useState('auto');
+  const [comingSoonFeature, setComingSoonFeature] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const meeting = useMeeting(roomId, isJoined ? userName : null);
 
   useEffect(() => {
     const savedName = localStorage.getItem('meet_name');
     if (savedName) setUserName(savedName);
+
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleJoin = () => {
@@ -43,8 +57,11 @@ const MeetingRoom = () => {
     setSidebarType(prev => prev === type ? null : type);
   };
 
-  const handleMenuAction = (actionId) => {
+  const handleMenuAction = (actionId, featureName) => {
     switch (actionId) {
+      case 'coming-soon':
+        setComingSoonFeature(featureName);
+        break;
       case 'adjust-view':
         setActivePanel('adjust-view');
         break;
@@ -83,70 +100,77 @@ const MeetingRoom = () => {
 
   if (!isJoined) {
     return (
-      <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-black p-6 lg:p-24 gap-12">
-        <div className="flex-1 max-w-2xl w-full">
-           <div className="relative aspect-video bg-dark-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
-              {meeting.localStream && meeting.isCamOn ? (
-                <video
-                  ref={(el) => el && (el.srcObject = meeting.localStream)}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover scale-x-[-1]"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-dark-surface">
-                  <div className="w-24 h-24 bg-accent-purple rounded-full flex items-center justify-center text-4xl font-bold uppercase text-white shadow-xl">
-                    {userName ? userName.charAt(0) : '?'}
+      <div className="flex flex-col min-h-screen min-h-[100dvh] bg-black text-white overflow-y-auto">
+        <header className="h-16 px-6 flex items-center border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+          <BytesMeetLogo />
+        </header>
+
+        <div className="flex-1 flex flex-col md:flex-row items-center justify-center p-6 lg:p-24 gap-12 max-w-7xl mx-auto w-full">
+          <div className="flex-1 max-w-2xl w-full">
+            <div className="relative aspect-video bg-dark-surface rounded-2xl overflow-hidden border border-white/5 shadow-2xl">
+                {meeting.localStream && meeting.isCamOn ? (
+                  <video
+                    ref={(el) => el && (el.srcObject = meeting.localStream)}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover scale-x-[-1]"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-dark-surface">
+                    <div className="w-24 h-24 bg-accent-purple rounded-full flex items-center justify-center text-4xl font-bold uppercase text-white shadow-xl">
+                      {userName ? userName.charAt(0) : '?'}
+                    </div>
+                    <span className="text-white/40 font-medium text-sm">Camera is off</span>
                   </div>
-                  <span className="text-white/40 font-medium">Camera is off</span>
+                )}
+
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                  <button
+                    onClick={meeting.toggleMic}
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
+                      meeting.isMicOn ? "border-white/20 hover:bg-white/10 text-white" : "bg-red-500 border-red-500 text-white"
+                    )}
+                    aria-label={meeting.isMicOn ? "Mute" : "Unmute"}
+                  >
+                    {meeting.isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+                  </button>
+                  <button
+                    onClick={meeting.toggleCam}
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
+                      meeting.isCamOn ? "border-white/20 hover:bg-white/10 text-white" : "bg-red-500 border-red-500 text-white"
+                    )}
+                    aria-label={meeting.isCamOn ? "Turn off camera" : "Turn on camera"}
+                  >
+                    {meeting.isCamOn ? <VideoIcon className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+                  </button>
                 </div>
-              )}
-
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
-                 <button
-                   onClick={meeting.toggleMic}
-                   className={cn(
-                     "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
-                     meeting.isMicOn ? "border-white/20 hover:bg-white/10 text-white" : "bg-red-500 border-red-500 text-white"
-                   )}
-                 >
-                   {meeting.isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-                 </button>
-                 <button
-                   onClick={meeting.toggleCam}
-                   className={cn(
-                     "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
-                     meeting.isCamOn ? "border-white/20 hover:bg-white/10 text-white" : "bg-red-500 border-red-500 text-white"
-                   )}
-                 >
-                   {meeting.isCamOn ? <VideoIcon className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
-                 </button>
-              </div>
-           </div>
-        </div>
-
-        <div className="w-full max-w-md space-y-10 text-center md:text-left">
-          <div className="space-y-4">
-            <h2 className="text-4xl font-normal text-white">Ready to join?</h2>
+            </div>
           </div>
-          <div className="space-y-6">
-            <input
-              type="text"
-              autoFocus
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Your name"
-              className="w-full bg-transparent border-b border-white/20 focus:border-accent-purple py-3 outline-none transition-all text-xl placeholder-white/40 text-white"
-              onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
-            />
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-               <button
+
+          <div className="w-full max-w-md space-y-8 text-center md:text-left pb-12 md:pb-0">
+            <div className="space-y-2">
+              <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Ready to join?</h2>
+              <p className="text-white/50 text-sm">Ensure your camera and microphone are working correctly.</p>
+            </div>
+            <div className="space-y-6">
+              <input
+                type="text"
+                autoFocus
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full bg-transparent border-b border-white/20 focus:border-accent-purple py-3 outline-none transition-all text-xl placeholder-white/20 text-white"
+                onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+              />
+              <button
                 disabled={!userName.trim()}
                 onClick={handleJoin}
-                className="flex-1 bg-accent-purple hover:bg-accent-purpleHover disabled:bg-dark-surface disabled:text-white/20 text-white font-medium py-3 rounded-full transition-all text-md shadow-lg"
+                className="w-full bg-accent-purple hover:bg-accent-purpleHover disabled:bg-dark-surface disabled:text-white/20 text-white font-bold py-4 rounded-xl transition-all text-lg shadow-xl shadow-accent-purple/10"
               >
-                Join now
+                Join meeting
               </button>
             </div>
           </div>
@@ -168,8 +192,8 @@ const MeetingRoom = () => {
         />
 
         <div className={cn(
-          "flex-1 flex flex-col transition-all duration-300 ease-in-out",
-          sidebarType ? "md:mr-[360px]" : ""
+          "flex-1 flex flex-col transition-none", // Fixed stretching: remove transition-all from parent
+          sidebarType && !isMobile ? "md:mr-[360px]" : ""
         )}>
           <VideoGrid
             participants={meeting.peers}
@@ -181,21 +205,27 @@ const MeetingRoom = () => {
               isHandRaised: meeting.isHandRaised,
               isScreenSharing: meeting.isScreenSharing
             }}
-            sidebarOpen={!!sidebarType}
+            sidebarOpen={!!sidebarType && !isMobile}
             layout={currentLayout}
           />
         </div>
 
-        {/* Sidebar Container */}
+        {/* Sidebar Container - FIXED stretching animation */}
         <div className={cn(
-          "w-full md:w-[360px] h-full bg-dark-bg fixed md:absolute right-0 top-0 z-40 shadow-2xl flex flex-col transition-all duration-300 ease-in-out border-l border-white/5",
-          sidebarType ? "translate-x-0" : "translate-x-full"
+          "h-full bg-dark-bg z-40 flex flex-col border-l border-white/5 transition-all duration-250 ease-out shadow-2xl",
+          isMobile
+            ? "fixed inset-0 w-full"
+            : "absolute right-0 top-0 w-[360px]",
+          sidebarType
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "translate-x-full opacity-0 pointer-events-none"
         )}>
           {sidebarType === 'chat' && (
             <Chat
               messages={meeting.messages}
               onSendMessage={meeting.sendMessage}
               onClose={() => setSidebarType(null)}
+              isMobile={isMobile}
             />
           )}
           {sidebarType === 'people' && (
@@ -208,6 +238,7 @@ const MeetingRoom = () => {
                 isHandRaised: meeting.isHandRaised
               }}
               onClose={() => setSidebarType(null)}
+              isMobile={isMobile}
             />
           )}
         </div>
@@ -258,6 +289,13 @@ const MeetingRoom = () => {
         <TroubleshootingPanel
           participantCount={participantsCount}
           onClose={() => setActivePanel(null)}
+        />
+      )}
+
+      {comingSoonFeature && (
+        <ComingSoonToast
+          featureName={comingSoonFeature}
+          onClose={() => setComingSoonFeature(null)}
         />
       )}
     </div>

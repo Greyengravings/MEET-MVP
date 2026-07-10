@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Video, Keyboard, Plus, Layout, ShieldCheck, Globe } from 'lucide-react';
+import { Video, Keyboard, Plus, ShieldCheck, Globe, ArrowRight } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+const BytesMeetLogo = ({ className }) => (
+  <div className={cn("flex items-center gap-1 font-bold text-2xl tracking-tighter select-none", className)}>
+    <span className="text-white">BYTES</span>
+    <span className="text-accent-purple">MEET</span>
+  </div>
+);
 
 const Landing = () => {
   const [roomCode, setRoomCode] = useState('');
-  const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleCreateMeeting = () => {
     const id = uuidv4().substring(0, 8);
@@ -27,101 +29,117 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#202124] text-[#e8eaed] flex flex-col font-sans">
-      {/* Google-Style Navbar */}
-      <header className="h-16 px-4 md:px-8 flex items-center justify-between border-b border-white/5">
-        <div className="flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded-lg shadow-lg shadow-blue-500/20">
-            <Video className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans overflow-x-hidden">
+      {/* Navbar */}
+      <header className="h-16 px-6 md:px-12 flex items-center justify-between border-b border-white/5 bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <BytesMeetLogo />
+        <div className="hidden md:flex items-center gap-6 text-white/50 text-sm font-medium">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Secure video meetings</span>
           </div>
-          <span className="text-2xl font-normal tracking-tight">Meet MVP</span>
-        </div>
-
-        <div className="flex items-center gap-6 text-[#9aa0a6] font-medium">
-          <div className="hidden sm:flex items-center gap-4">
-            <span className="tabular-nums">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <span>•</span>
-            <span>
-              {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
-            </span>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">H</div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-24 py-12 gap-16 max-w-7xl mx-auto w-full overflow-y-auto">
+      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center px-6 lg:px-24 py-12 lg:py-0 gap-16 max-w-7xl mx-auto w-full">
         <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-left duration-700">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] text-white">
-            Premium video meetings. <br className="hidden lg:block" /> Now free for everyone.
-          </h1>
-          <p className="text-[#9aa0a6] text-xl lg:text-2xl font-light max-w-xl leading-relaxed">
-            We re-engineered the service we built for secure business meetings to make it free and available for all.
-          </p>
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
+              Meet. Connect.<br />Collaborate.
+            </h1>
+            <p className="text-white/50 text-xl font-light max-w-lg leading-relaxed">
+              Simple video meetings built for seamless conversations. No friction, just connection.
+            </p>
+          </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md lg:max-w-none">
             <button
               onClick={handleCreateMeeting}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-md font-medium flex items-center justify-center gap-3 transition-all shadow-xl hover:shadow-blue-500/20 active:scale-95"
+              className="w-full sm:w-auto bg-accent-purple hover:bg-accent-purpleHover text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all shadow-xl shadow-accent-purple/10 active:scale-95 whitespace-nowrap"
             >
               <Plus className="w-5 h-5" />
               New meeting
             </button>
 
-            <form onSubmit={handleJoinMeeting} className="w-full sm:w-auto flex items-center gap-3 group">
-              <div className="relative flex-1 sm:w-72">
-                <Keyboard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9aa0a6] group-focus-within:text-blue-400 transition-colors" />
+            <form onSubmit={handleJoinMeeting} className="w-full sm:w-auto flex items-center gap-2 group">
+              <div className="relative flex-1 sm:w-64">
+                <Keyboard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 group-focus-within:text-accent-purple transition-colors" />
                 <input
                   type="text"
-                  placeholder="Enter a code or link"
+                  placeholder="Enter meeting code"
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
-                  className="w-full bg-transparent border border-[#5f6368] focus:border-blue-400 focus:ring-1 focus:ring-blue-400 rounded-md py-3.5 pl-12 pr-4 outline-none transition-all text-lg placeholder-[#9aa0a6]"
+                  className="w-full bg-white/5 border border-white/10 focus:border-accent-purple focus:ring-1 focus:ring-accent-purple rounded-xl py-4 pl-12 pr-4 outline-none transition-all text-lg placeholder-white/20"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!roomCode.trim()}
-                className="text-blue-400 font-semibold hover:bg-blue-400/10 px-6 py-3.5 rounded-md transition-all disabled:text-[#5f6368] text-lg"
+                className="bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white p-4 rounded-xl transition-all border border-white/10"
+                aria-label="Join meeting"
               >
-                Join
+                <ArrowRight className="w-6 h-6" />
               </button>
             </form>
           </div>
 
-          <div className="pt-10 border-t border-white/5 w-full flex flex-wrap justify-center lg:justify-start gap-8 opacity-60">
-             <div className="flex items-center gap-2">
-               <ShieldCheck className="w-5 h-5" />
-               <span className="text-sm">Secure by default</span>
+          <div className="pt-8 border-t border-white/5 w-full flex flex-wrap justify-center lg:justify-start gap-8 opacity-40">
+             <div className="flex items-center gap-2 text-sm">
+               <Globe className="w-4 h-4" />
+               <span>Available everywhere</span>
              </div>
-             <div className="flex items-center gap-2">
-               <Globe className="w-5 h-5" />
-               <span className="text-sm">Global connection</span>
+             <div className="flex items-center gap-2 text-sm text-accent-purple">
+               <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
+               <span className="font-medium">Simple. Fast. Connected.</span>
              </div>
           </div>
         </div>
 
-        {/* Feature Graphic */}
-        <div className="flex-1 w-full max-w-lg animate-in fade-in zoom-in duration-1000 delay-200">
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-[#303134] border-[12px] border-[#202124] shadow-2xl flex flex-col items-center justify-center p-8">
-            <div className="bg-blue-600/10 p-8 rounded-full mb-8">
-              <Layout className="w-32 h-32 text-blue-500 opacity-80" />
-            </div>
-            <h3 className="text-2xl font-medium text-white mb-2">Crystal clear grid</h3>
-            <p className="text-[#9aa0a6] text-center text-lg px-8">
-              See up to 16 people in a beautifully balanced grid layout on any device.
-            </p>
+        {/* Abstract Preview Card */}
+        <div className="flex-1 w-full max-w-lg lg:max-w-md animate-in fade-in zoom-in duration-1000 delay-200">
+          <div className="relative aspect-[4/3] rounded-3xl overflow-hidden bg-white/5 border border-white/10 shadow-2xl p-6 flex flex-col gap-4">
+             {/* Header UI Mockup */}
+             <div className="flex items-center justify-between opacity-20">
+               <div className="flex gap-2">
+                 <div className="w-3 h-3 rounded-full bg-white" />
+                 <div className="w-3 h-3 rounded-full bg-white" />
+               </div>
+               <div className="w-16 h-3 rounded-full bg-white" />
+             </div>
 
-            <div className="mt-12 flex gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-[#5f6368]"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-[#5f6368]"></div>
-            </div>
+             {/* Participants Grid Mockup */}
+             <div className="flex-1 grid grid-cols-2 gap-3">
+                {[
+                  { name: 'HN', color: 'bg-accent-purple' },
+                  { name: 'AS', color: 'bg-white/10' },
+                  { name: 'RK', color: 'bg-white/5' },
+                  { name: '+3', color: 'bg-black' }
+                ].map((p, i) => (
+                  <div key={i} className={cn("rounded-xl flex items-center justify-center border border-white/5 relative overflow-hidden group", p.color)}>
+                     <span className="text-xl font-bold opacity-40">{p.name}</span>
+                     <div className="absolute bottom-2 left-2 w-8 h-2 rounded-full bg-white/10" />
+                  </div>
+                ))}
+             </div>
+
+             {/* Controls UI Mockup */}
+             <div className="flex justify-center gap-3 opacity-20">
+                <div className="w-8 h-8 rounded-full bg-white" />
+                <div className="w-8 h-8 rounded-full bg-white" />
+                <div className="w-8 h-8 rounded-full bg-red-500" />
+             </div>
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-8 px-6 text-center border-t border-white/5">
+        <div className="flex flex-col items-center gap-2 opacity-30 text-xs tracking-widest uppercase font-medium">
+          <BytesMeetLogo className="scale-75 origin-center opacity-100" />
+          <span>Simple. Fast. Connected.</span>
+        </div>
+      </footer>
     </div>
   );
 };

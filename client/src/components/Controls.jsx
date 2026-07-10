@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import MoreOptionsMenu from './MoreOptionsMenu';
+import MobileMoreSheet from './MobileMoreSheet';
 
 const Controls = ({ 
   isMicOn, toggleMic, 
@@ -30,13 +31,22 @@ const Controls = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleMenuAction = (actionId) => {
+  const handleMenuAction = (actionId, featureName) => {
     setShowMoreMenu(false);
-    onMenuAction(actionId);
+
+    // Handle actions that are directly in Controls but also in More menu on mobile
+    if (actionId === 'chat') onToggleChat();
+    else if (actionId === 'people') onToggleParticipants();
+    else if (actionId === 'raise-hand') toggleHandRaised();
+    else if (actionId === 'screen-share') toggleScreenShare();
+    else onMenuAction(actionId, featureName);
   };
 
   return (
-    <div className="h-20 bg-pure-black flex items-center justify-between px-4 sm:px-6 z-50 border-t border-white/10 relative">
+    <div className={cn(
+      "bg-black flex items-center justify-between px-4 sm:px-6 z-50 border-t border-white/10 relative",
+      isMobile ? "h-24 pb-[env(safe-area-inset-bottom)]" : "h-20"
+    )}>
       {/* Left: Meeting Info (Desktop only) */}
       {!isMobile && (
         <div className="flex items-center gap-4 text-sm font-medium text-white/90 min-w-[200px]">
@@ -47,14 +57,17 @@ const Controls = ({
       )}
 
       {/* Center: Main Media Controls */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center md:flex-initial">
+      <div className={cn(
+        "flex items-center gap-3",
+        isMobile ? "flex-1 justify-around" : "justify-center"
+      )}>
         <button
           onClick={toggleMic}
           className={cn(
-            "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+            "w-12 h-12 rounded-full flex items-center justify-center transition-all border border-white/10",
             isMicOn ? "bg-dark-surface hover:bg-dark-hover" : "bg-red-500 hover:bg-red-600"
           )}
-          title={isMicOn ? "Mute" : "Unmute"}
+          aria-label={isMicOn ? "Mute" : "Unmute"}
         >
           {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5 text-white" />}
         </button>
@@ -62,20 +75,20 @@ const Controls = ({
         <button
           onClick={toggleCam}
           className={cn(
-            "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+            "w-12 h-12 rounded-full flex items-center justify-center transition-all border border-white/10",
             isCamOn ? "bg-dark-surface hover:bg-dark-hover" : "bg-red-500 hover:bg-red-600"
           )}
-          title={isCamOn ? "Turn off camera" : "Turn on camera"}
+          aria-label={isCamOn ? "Turn off camera" : "Turn on camera"}
         >
           {isCamOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5 text-white" />}
         </button>
 
-        {!isMobile && (
+        {!isMobile ? (
           <>
             <button
               onClick={toggleHandRaised}
               className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+                "w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
                 isHandRaised ? "bg-accent-purple text-white" : "bg-dark-surface hover:bg-dark-hover text-white"
               )}
               title="Raise hand"
@@ -86,7 +99,7 @@ const Controls = ({
             <button
               onClick={toggleScreenShare}
               className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+                "w-11 h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
                 isScreenSharing ? "bg-accent-purple text-white" : "bg-dark-surface hover:bg-dark-hover text-white"
               )}
               title="Present now"
@@ -94,75 +107,82 @@ const Controls = ({
               <ScreenShare className="w-5 h-5" />
             </button>
           </>
-        )}
+        ) : null}
 
         <button
           onClick={() => setShowMoreMenu(!showMoreMenu)}
           className={cn(
-            "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-dark-surface hover:bg-dark-hover border border-white/10 text-white transition-all",
+            "w-12 h-12 rounded-full flex items-center justify-center bg-dark-surface hover:bg-dark-hover border border-white/10 text-white transition-all",
             showMoreMenu && "bg-accent-purple border-accent-purple"
           )}
+          aria-label="More options"
         >
           <MoreVertical className="w-5 h-5" />
         </button>
 
         <button
           onClick={onLeave}
-          className="w-14 h-10 sm:w-16 sm:h-11 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-all ml-2"
-          title="Leave call"
+          className="w-16 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-all"
+          aria-label="Leave call"
         >
           <PhoneOff className="w-6 h-6 text-white" />
         </button>
       </div>
 
-      {/* Right: Side Actions */}
-      <div className={cn(
-        "flex items-center gap-1 min-w-[200px] justify-end",
-        isMobile ? "hidden" : "flex"
-      )}>
-        <button
-          onClick={onToggleParticipants}
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
-            showParticipants ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
-          )}
-        >
-          <Users className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 bg-accent-purple text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 font-bold border-2 border-pure-black">
-            {participantCount}
-          </span>
-        </button>
+      {/* Right: Side Actions (Desktop only) */}
+      {!isMobile && (
+        <div className="flex items-center gap-1 min-w-[200px] justify-end">
+          <button
+            onClick={onToggleParticipants}
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
+              showParticipants ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
+            )}
+            aria-label="Open participants"
+          >
+            <Users className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-accent-purple text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 font-bold border-2 border-pure-black">
+              {participantCount}
+            </span>
+          </button>
 
-        <button 
-          onClick={onToggleChat}
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
-            showChat ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
-          )}
-        >
-          <MessageSquare className="w-5 h-5" />
-        </button>
+          <button
+            onClick={onToggleChat}
+            className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
+              showChat ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
+            )}
+            aria-label="Open chat"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
 
-        <button
-          onClick={() => onMenuAction('adjust-view')}
-          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-all text-white"
-        >
-          <Grid className="w-5 h-5" />
-        </button>
-      </div>
+          <button
+            onClick={() => onMenuAction('adjust-view')}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-all text-white"
+            aria-label="Adjust view"
+          >
+            <Grid className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {showMoreMenu && (
-        <MoreOptionsMenu
-          onClose={() => setShowMoreMenu(false)}
-          onAction={handleMenuAction}
-          isMobile={isMobile}
-          activeStates={{
-            mic: isMicOn,
-            cam: isCamOn,
-            hand: isHandRaised,
-            screen: isScreenSharing
-          }}
-        />
+        isMobile ? (
+          <MobileMoreSheet
+            onClose={() => setShowMoreMenu(false)}
+            onAction={handleMenuAction}
+            activeStates={{
+              hand: isHandRaised,
+              screen: isScreenSharing
+            }}
+          />
+        ) : (
+          <MoreOptionsMenu
+            onClose={() => setShowMoreMenu(false)}
+            onAction={handleMenuAction}
+          />
+        )
       )}
     </div>
   );

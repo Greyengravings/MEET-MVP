@@ -19,7 +19,7 @@ const MeetingInfoBar = ({ roomId, raisedHands = [], onInfoClick }) => {
   };
 
   return (
-    <div className="absolute top-0 left-0 p-4 z-30 flex items-center gap-4 text-white select-none pointer-events-none">
+    <div className="absolute top-0 left-0 p-4 z-30 flex items-center gap-4 text-white select-none pointer-events-none pt-[max(1rem,env(safe-area-inset-top))]">
       <div
         className="flex items-center gap-3 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-lg pointer-events-auto cursor-pointer hover:bg-black/40 transition-colors"
         onClick={onInfoClick}

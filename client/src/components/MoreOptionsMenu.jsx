@@ -9,7 +9,7 @@ import { cn } from '../lib/utils';
 const MoreOptionsMenu = ({
   onClose,
   onAction,
-  activeActions = {} // { fullscreen: true, pip: false, ... }
+  activeActions = {}
 }) => {
   const menuRef = useRef(null);
 
@@ -35,9 +35,9 @@ const MoreOptionsMenu = ({
     { id: 'fullscreen', icon: activeActions.fullscreen ? Minimize : Maximize, label: activeActions.fullscreen ? 'Exit full screen' : 'Full screen' },
     { id: 'pip', icon: PictureInPicture, label: 'Open picture-in-picture' },
     { id: 'chat', icon: MessageSquare, label: 'In-call messages' },
-    { id: 'tools', icon: Wrench, label: 'Meeting tools' },
-    { id: 'host-controls', icon: Shield, label: 'Host controls' },
-    { id: 'report', icon: AlertCircle, label: 'Report a problem' },
+    { id: 'tools', icon: Wrench, label: 'Meeting tools', comingSoon: true },
+    { id: 'host-controls', icon: Shield, label: 'Host controls', comingSoon: true },
+    { id: 'report', icon: AlertCircle, label: 'Report a problem', comingSoon: true },
     { id: 'troubleshoot', icon: HelpCircle, label: 'Troubleshooting & help' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
@@ -47,7 +47,7 @@ const MoreOptionsMenu = ({
       ref={menuRef}
       className={cn(
         "absolute bottom-24 right-4 md:right-auto md:left-1/2 md:-translate-x-1/2 lg:left-auto lg:right-6",
-        "bg-dark-bg border border-white/10 rounded-xl shadow-2xl py-2 w-72 z-[100] animate-in slide-in-from-bottom-2 duration-200"
+        "bg-dark-bg border border-white/10 rounded-2xl shadow-2xl py-2 w-72 z-[100] animate-in slide-in-from-bottom-2 duration-200"
       )}
     >
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 md:hidden">
@@ -62,13 +62,24 @@ const MoreOptionsMenu = ({
           <button
             key={item.id}
             onClick={() => {
-              onAction(item.id);
+              if (item.comingSoon) {
+                onAction('coming-soon', item.label);
+              } else {
+                onAction(item.id);
+              }
               if (item.id !== 'fullscreen') onClose();
             }}
-            className="w-full flex items-center gap-4 px-4 py-3 hover:bg-white/5 transition-colors text-white text-sm text-left group"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors text-white text-sm text-left group"
           >
-            <item.icon className="w-5 h-5 text-white group-hover:text-accent-purple transition-colors" />
-            <span>{item.label}</span>
+            <div className="flex items-center gap-4">
+              <item.icon className="w-5 h-5 text-white group-hover:text-accent-purple transition-colors" />
+              <span>{item.label}</span>
+            </div>
+            {item.comingSoon && (
+              <span className="text-[10px] bg-white/10 text-white/40 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold group-hover:bg-accent-purple/20 group-hover:text-accent-purple transition-colors">
+                Soon
+              </span>
+            )}
           </button>
         ))}
       </div>
