@@ -5,11 +5,13 @@ const SOCKET_URL = 'https://meet-server-lsp0.onrender.com';
 
 export const useMeeting = (roomId, userName) => {
   const [localStream, setLocalStream] = useState(null);
-  const [peers, setPeers] = useState([]); // Array of { socketId, name, stream, isMicOn, isCamOn }
+  const [peers, setPeers] = useState([]); // Array of { socketId, name, stream, isMicOn, isCamOn, isHandRaised }
   const [messages, setMessages] = useState([]);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
+  const [isHandRaised, setIsHandRaised] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   const socketRef = useRef();
   const peersRef = useRef({}); // socketId -> RTCPeerConnection
@@ -22,6 +24,14 @@ export const useMeeting = (roomId, userName) => {
       { urls: 'stun:stun1.l.google.com:19302' },
     ],
   };
+
+  const addNotification = useCallback((notification) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { ...notification, id }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  }, []);
 
   const createPeerConnection = useCallback((targetSocketId, name) => {
     const pc = new RTCPeerConnection(iceServers);
@@ -106,12 +116,13 @@ export const useMeeting = (roomId, userName) => {
           name: user.name,
           stream: null,
           isMicOn: user.isMicOn,
-          isCamOn: user.isCamOn
+          isCamOn: user.isCamOn,
+          isHandRaised: user.isHandRaised || false
         }]);
       });
     });
 
-    socketRef.current.on('user-joined', async ({ socketId, name, isMicOn, isCamOn }) => {
+    socketRef.current.on('user-joined', async ({ socketId, name, isMicOn, isCamOn, isHandRaised }) => {
       const pc = createPeerConnection(socketId, name);
       peersRef.current[socketId] = pc;
       setPeers(prev => [...prev, {
@@ -119,7 +130,8 @@ export const useMeeting = (roomId, userName) => {
         name,
         stream: null,
         isMicOn,
-        isCamOn
+        isCamOn,
+        isHandRaised: isHandRaised || false
       }]);
     });
 
@@ -130,6 +142,18 @@ export const useMeeting = (roomId, userName) => {
         }
         return p;
       }));
+    });
+
+    socketRef.current.on('user-hand-updated', ({ socketId, isHandRaised, name }) => {
+      setPeers(prev => prev.map(p => {
+        if (p.socketId === socketId) {
+          return { ...p, isHandRaised };
+        }
+        return p;
+      }));
+      if (isHandRaised) {
+        addNotification({ type: 'hand-raise', name });
+      }
     });
 
     socketRef.current.on('signal', async ({ senderId, signal }) => {
@@ -153,6 +177,7 @@ export const useMeeting = (roomId, userName) => {
 
     socketRef.current.on('chat-message', (message) => {
       setMessages((prev) => [...prev, message]);
+      addNotification({ type: 'chat', name: message.sender, text: message.text });
     });
 
     socketRef.current.on('user-left', (socketId) => {
@@ -169,7 +194,7 @@ export const useMeeting = (roomId, userName) => {
       }
       Object.values(peersRef.current).forEach(pc => pc.close());
     };
-  }, [roomId, userName, createPeerConnection]);
+  }, [roomId, userName, createPeerConnection, addNotification]);
 
   // Sync media changes to socket
   useEffect(() => {
@@ -178,25 +203,43 @@ export const useMeeting = (roomId, userName) => {
     }
   }, [isMicOn, isCamOn, roomId]);
 
+  // Sync hand status to socket
+  useEffect(() => {
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('update-hand-status', { roomId, isHandRaised });
+    }
+  }, [isHandRaised, roomId]);
+
   const toggleMic = () => {
     if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach(track => {
-        track.enabled = !track.enabled;
-      });
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isMicOn;
+      }
       setIsMicOn(!isMicOn);
     }
   };
 
   const toggleCam = () => {
     if (localStreamRef.current) {
-      localStreamRef.current.getVideoTracks().forEach(track => {
-        track.enabled = !track.enabled;
-      });
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isCamOn;
+      }
       setIsCamOn(!isCamOn);
     }
   };
 
+  const toggleHandRaised = () => {
+    setIsHandRaised(!isHandRaised);
+  };
+
   const toggleScreenShare = async () => {
+    if (!navigator.mediaDevices.getDisplayMedia) {
+      alert('Screen sharing is not supported by this browser or device.');
+      return;
+    }
+
     if (!isScreenSharing) {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -227,6 +270,7 @@ export const useMeeting = (roomId, userName) => {
   const stopScreenShare = () => {
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(track => track.stop());
+      screenStreamRef.current = null;
     }
     
     const videoTrack = localStreamRef.current.getVideoTracks()[0];
@@ -251,9 +295,12 @@ export const useMeeting = (roomId, userName) => {
     messages,
     isMicOn,
     isCamOn,
+    isHandRaised,
     isScreenSharing,
+    notifications,
     toggleMic,
     toggleCam,
+    toggleHandRaised,
     toggleScreenShare,
     sendMessage
   };

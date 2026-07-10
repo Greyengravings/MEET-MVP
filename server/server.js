@@ -34,7 +34,8 @@ io.on('connection', (socket) => {
       socketId: socket.id,
       name,
       isMicOn: isMicOn !== undefined ? isMicOn : true,
-      isCamOn: isCamOn !== undefined ? isCamOn : true
+      isCamOn: isCamOn !== undefined ? isCamOn : true,
+      isHandRaised: false
     };
 
     // Inform other users in the room about the new user
@@ -59,6 +60,17 @@ io.on('connection', (socket) => {
         user.isCamOn = isCamOn;
         // Broadcast change to everyone else in the room
         socket.to(roomId).emit('user-media-updated', { socketId: socket.id, isMicOn, isCamOn });
+      }
+    }
+  });
+
+  socket.on('update-hand-status', ({ roomId, isHandRaised }) => {
+    if (rooms[roomId]) {
+      const user = rooms[roomId].find(u => u.socketId === socket.id);
+      if (user) {
+        user.isHandRaised = isHandRaised;
+        // Broadcast change to everyone else in the room
+        socket.to(roomId).emit('user-hand-updated', { socketId: socket.id, isHandRaised, name: user.name });
       }
     }
   });

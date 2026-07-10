@@ -1,41 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Mic, MicOff, Video, VideoOff, ScreenShare, 
   MessageSquare, Users, PhoneOff, Info, MoreVertical,
-  Hand, ClosedCaption, Grid
+  Hand, Grid
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import MoreOptionsMenu from './MoreOptionsMenu';
 
 const Controls = ({ 
   isMicOn, toggleMic, 
   isCamOn, toggleCam, 
+  isHandRaised, toggleHandRaised,
   isScreenSharing, toggleScreenShare,
   onLeave, 
   participantCount,
   onToggleChat,
   showChat,
-  roomId
+  onToggleParticipants,
+  showParticipants,
+  roomId,
+  onMenuAction
 }) => {
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleMenuAction = (actionId) => {
+    setShowMoreMenu(false);
+    onMenuAction(actionId);
+  };
 
   return (
-    <div className="h-20 bg-[#202124] flex items-center justify-between px-4 sm:px-6 z-50">
-      {/* Left: Meeting Info */}
-      <div className="flex items-center gap-4 text-sm font-medium text-white/90 min-w-[200px] hidden md:flex">
-        <span className="tabular-nums">{time}</span>
-        <span className="text-white/20">|</span>
-        <span className="hover:bg-white/5 px-2 py-1 rounded cursor-pointer truncate max-w-[120px]">
-          {roomId}
-        </span>
-      </div>
+    <div className="h-20 bg-pure-black flex items-center justify-between px-4 sm:px-6 z-50 border-t border-white/10 relative">
+      {/* Left: Meeting Info (Desktop only) */}
+      {!isMobile && (
+        <div className="flex items-center gap-4 text-sm font-medium text-white/90 min-w-[200px]">
+          <span className="hover:bg-white/5 px-2 py-1 rounded cursor-pointer transition-colors" onClick={() => onMenuAction('show-info')}>
+            {roomId}
+          </span>
+        </div>
+      )}
 
       {/* Center: Main Media Controls */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center md:flex-initial">
         <button
           onClick={toggleMic}
           className={cn(
             "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
-            isMicOn ? "bg-[#3c4043] hover:bg-[#4a4e51]" : "bg-[#ea4335] hover:bg-[#d93025]"
+            isMicOn ? "bg-dark-surface hover:bg-dark-hover" : "bg-red-500 hover:bg-red-600"
           )}
           title={isMicOn ? "Mute" : "Unmute"}
         >
@@ -46,40 +63,52 @@ const Controls = ({
           onClick={toggleCam}
           className={cn(
             "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
-            isCamOn ? "bg-[#3c4043] hover:bg-[#4a4e51]" : "bg-[#ea4335] hover:bg-[#d93025]"
+            isCamOn ? "bg-dark-surface hover:bg-dark-hover" : "bg-red-500 hover:bg-red-600"
           )}
           title={isCamOn ? "Turn off camera" : "Turn on camera"}
         >
           {isCamOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5 text-white" />}
         </button>
 
-        {/* These would be functional in a full implementation */}
-        <button className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full items-center justify-center bg-[#3c4043] hover:bg-[#4a4e51] border border-white/10">
-          <ClosedCaption className="w-5 h-5" />
-        </button>
+        {!isMobile && (
+          <>
+            <button
+              onClick={toggleHandRaised}
+              className={cn(
+                "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+                isHandRaised ? "bg-accent-purple text-white" : "bg-dark-surface hover:bg-dark-hover text-white"
+              )}
+              title="Raise hand"
+            >
+              <Hand className={cn("w-5 h-5", isHandRaised && "fill-current")} />
+            </button>
 
-        <button className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full items-center justify-center bg-[#3c4043] hover:bg-[#4a4e51] border border-white/10">
-          <Hand className="w-5 h-5" />
-        </button>
+            <button
+              onClick={toggleScreenShare}
+              className={cn(
+                "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
+                isScreenSharing ? "bg-accent-purple text-white" : "bg-dark-surface hover:bg-dark-hover text-white"
+              )}
+              title="Present now"
+            >
+              <ScreenShare className="w-5 h-5" />
+            </button>
+          </>
+        )}
 
         <button
-          onClick={toggleScreenShare}
+          onClick={() => setShowMoreMenu(!showMoreMenu)}
           className={cn(
-            "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all border border-white/10",
-            isScreenSharing ? "bg-[#8ab4f8] text-[#202124]" : "bg-[#3c4043] hover:bg-[#4a4e51]"
+            "w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-dark-surface hover:bg-dark-hover border border-white/10 text-white transition-all",
+            showMoreMenu && "bg-accent-purple border-accent-purple"
           )}
-          title="Present now"
         >
-          <ScreenShare className="w-5 h-5" />
-        </button>
-
-        <button className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full items-center justify-center bg-[#3c4043] hover:bg-[#4a4e51] border border-white/10">
           <MoreVertical className="w-5 h-5" />
         </button>
 
         <button
           onClick={onLeave}
-          className="w-14 h-10 sm:w-16 sm:h-11 bg-[#ea4335] hover:bg-[#d93025] rounded-full flex items-center justify-center transition-all ml-2 sm:ml-4"
+          className="w-14 h-10 sm:w-16 sm:h-11 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-all ml-2"
           title="Leave call"
         >
           <PhoneOff className="w-6 h-6 text-white" />
@@ -87,14 +116,19 @@ const Controls = ({
       </div>
 
       {/* Right: Side Actions */}
-      <div className="flex items-center gap-1 sm:min-w-[200px] justify-end">
-        <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-all hidden sm:flex">
-          <Info className="w-5 h-5" />
-        </button>
-
-        <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-all relative">
+      <div className={cn(
+        "flex items-center gap-1 min-w-[200px] justify-end",
+        isMobile ? "hidden" : "flex"
+      )}>
+        <button
+          onClick={onToggleParticipants}
+          className={cn(
+            "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
+            showParticipants ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
+          )}
+        >
           <Users className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 bg-[#8ab4f8] text-[#202124] text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 font-bold">
+          <span className="absolute -top-1 -right-1 bg-accent-purple text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 font-bold border-2 border-pure-black">
             {participantCount}
           </span>
         </button>
@@ -103,16 +137,33 @@ const Controls = ({
           onClick={onToggleChat}
           className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center transition-all relative",
-            showChat ? "bg-[#8ab4f8] text-[#202124]" : "hover:bg-white/5"
+            showChat ? "bg-accent-purple text-white" : "hover:bg-white/5 text-white"
           )}
         >
           <MessageSquare className="w-5 h-5" />
         </button>
 
-        <button className="hidden sm:flex w-10 h-10 rounded-full items-center justify-center hover:bg-white/5 transition-all">
+        <button
+          onClick={() => onMenuAction('adjust-view')}
+          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 transition-all text-white"
+        >
           <Grid className="w-5 h-5" />
         </button>
       </div>
+
+      {showMoreMenu && (
+        <MoreOptionsMenu
+          onClose={() => setShowMoreMenu(false)}
+          onAction={handleMenuAction}
+          isMobile={isMobile}
+          activeStates={{
+            mic: isMicOn,
+            cam: isCamOn,
+            hand: isHandRaised,
+            screen: isScreenSharing
+          }}
+        />
+      )}
     </div>
   );
 };
